@@ -20,7 +20,7 @@ router.post('/signup', signup); // sign up should just post
 
 router.post('/login', login); // sign up should just post
 router.post('/forgotPassword', forgotPassword);
-router.post('/resetPassword', resetPassword);
+router.patch('/resetPassword/:token', resetPassword);
 
 router.route('/').get(getAllUsers).post(createUser);
 router.route('/:id').get(getUser).delete(deleteUser).patch(updateUser);
