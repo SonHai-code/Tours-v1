@@ -13,6 +13,15 @@ const signToken = (id) =>
     expiresIn: process.env.JWT_EXPIRES_IN,
   });
 
+// Send the token to the client
+const createAndSendToken = (res, statusCode, user) => {
+  const token = signToken(user._id);
+  res.status(statusCode).json({
+    status: 'success',
+    token,
+  });
+};
+
 // Create new user account
 exports.signup = catchAsync(async (req, res, next) => {
   const newUser = await User.create(req.body);
@@ -44,13 +53,10 @@ exports.login = catchAsync(async (req, res, next) => {
   }
 
   // 3) If everything is ok, send token to the client
-  const token = signToken(user._id);
-  res.status(200).json({
-    status: 'success',
-    token,
-  });
+  createAndSendToken(res, 200, user);
 });
 
+// protect routes -> user must log in to get access the datas
 exports.protect = catchAsync(async (req, res, next) => {
   let token;
   // 1) Getting the token and check if it's there
@@ -58,7 +64,7 @@ exports.protect = catchAsync(async (req, res, next) => {
     req.headers.authorization &&
     req.headers.authorization.startsWith('Bearer')
   ) {
-    token = req.headers.authorization.split(' ')[1];
+    token = req.headers.authorization.split(' ')[1]; // get the token
   }
   console.log(token);
   if (!token) {
@@ -152,16 +158,33 @@ exports.resetPassword = catchAsync(async (req, res, next) => {
     passwordResetExpires: { $gt: Date.now() },
   });
 
-  // 2) If the token has not expired, and there is user, set new password
   if (!user) {
     return next(new AppError('Token is invalid or has expired', 400));
   }
+  // 2) If the token has not expired, and there is user, set new password
   user.password = req.body.password;
   user.passwordConfirm = req.body.passwordConfirm;
   user.passwordResetToken = undefined;
   user.passwordResetExpires = undefined;
   await User.save();
-
-  // 3) Update changePasswordAt property of the user
+  // 3) Update changePasswordAt property of the user (userModule.js)
   // 4) Log the user in, send JWT
+  createAndSendToken(res, 200, user);
+});
+
+exports.updatePassword = catchAsync(async (req, res, next) => {
+  // 1) Get user from the collection
+  const user = await User.findById(req.user.id).select('+password'); // Because the user has already logged in
+  // 2) Check POST current password is correct
+  if (!user.correctPassword(req.body.passwordCurrent, user.password)) {
+    return next(
+      new AppError('Your current password is wrong. Please try again!', 401)
+    );
+  }
+  // 3) If correct, update new password
+  user.password = req.body.password;
+  user.passwordConfirm = req.body.passwordConfirm;
+  await user.save();
+  // 4) Log in, send JWT to client
+  createAndSendToken(res, 200, user);
 });

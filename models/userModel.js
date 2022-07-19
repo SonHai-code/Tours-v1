@@ -57,6 +57,15 @@ userSchema.pre('save', async function (next) {
   this.passwordConfirm = undefined;
 });
 
+// Update changePasswordAt property of the user
+userSchema.pre('save', function (next) {
+  if (!this.isModified('password') || this.isNew) return next();
+
+  this.passwordChangeAt = Date.now() - 1000;
+  next();
+});
+
+// Check the password of the user
 userSchema.methods.correctPassword = async function (
   candidatePassword,
   userPassword
@@ -64,6 +73,7 @@ userSchema.methods.correctPassword = async function (
   return await bcrypt.compare(candidatePassword, userPassword);
 };
 
+// Check whether user change the password recently
 userSchema.methods.changedPasswordAfter = function (JWTTimestamp) {
   if (this.passwordChangeAt) {
     const changedTimestamp = parseInt(
