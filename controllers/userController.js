@@ -76,3 +76,13 @@ exports.updateMe = catchAsync(async (req, res, next) => {
     },
   });
 });
+
+// Just delete user from client, NOT delete it from DB
+exports.deleteMe = catchAsync(async (req, res, next) => {
+  await User.findByIdAndUpdate(req.user.id, { active: false });
+
+  res.status(204).json({
+    status: 'sucess',
+    data: null,
+  });
+});
