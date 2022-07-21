@@ -43,7 +43,7 @@ const userSchema = new mongoose.Schema({
   },
   passwordChangeAt: Date,
   passwordResetToken: String,
-  passwordExpires: Date,
+  passwordResetExpires: Date,
   active: {
     type: Boolean,
     default: true,
@@ -61,25 +61,27 @@ userSchema.pre('save', async function (next) {
 
   // Delete the passwordConfirm
   this.passwordConfirm = undefined;
+  next();
 });
 
 // Update changePasswordAt property of the user
 userSchema.pre('save', function (next) {
-  if (!this.isModified('password') || this.isNew) return next();
+  if (!this.isModified('password') || this.isNew) return next(); // if the password was NOT modified or was created then NEXT()
 
   this.passwordChangeAt = Date.now() - 1000;
   next();
 });
 
+// Middleware berfore query
 userSchema.pre(/^find/, function (next) {
   // this points to current query
   this.find({ active: { $ne: false } });
   next();
 });
 
-// Check whether the password was changed
+// Set the passwordChangeAt property
 userSchema.pre('save', function (next) {
-  if (!this.isModified('password') || this.isNew) return next();
+  if (!this.isModified('password') || this.isNew) return next(); // if the password was NOT modified or was created then NEXT()
 
   this.passwordChangeAt = Date.now() - 1000;
   next();
@@ -108,16 +110,16 @@ userSchema.methods.changedPasswordAfter = function (JWTTimestamp) {
 
 // Create new token for reset password
 userSchema.methods.createPasswordResetToken = function () {
-  const resetToken = crypto.randomBytes(32).toString('hex');
+  const resetToken = crypto.randomBytes(32).toString('hex'); // create random string
 
-  this.createPasswordResetToken = crypto
+  this.passwordResetToken = crypto // create reset password
     .createHash('sha256')
     .update(resetToken)
     .digest('hex');
 
   console.log({ resetToken }, this.passwordResetToken);
 
-  this.passwordExpires = Date.now() + 10 * 60 * 1000; // miliseconds
+  this.passwordResetExpires = Date.now() + 10 * 60 * 1000; // miliseconds
 
   return resetToken;
 };
