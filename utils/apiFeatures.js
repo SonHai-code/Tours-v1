@@ -1,17 +1,19 @@
+// query=Tour.find()    queryString=req.query
 class APIFeatures {
   constructor(query, queryString) {
-    (this.query = query), (this.queryString = queryString);
+    this.query = query;
+    this.queryString = queryString;
   }
 
   filter() {
     // 1) Filtering
     const queryObj = { ...this.queryString };
     const excludedFields = ['page', 'limit', 'sort', 'fields'];
-    excludedFields.forEach((el) => delete queryObj[el]);
+    excludedFields.forEach((el) => delete queryObj[el]); // Remove some excludedFields from queryObj
 
     // 2) Advanced Filtering
-    let queryStr = JSON.stringify(queryObj);
-    queryStr = queryStr.replace(/\b(gte|gt|lt|lte)\b/g, (match) => `$${match}`);
+    let queryStr = JSON.stringify(queryObj); // object --> string 
+    queryStr = queryStr.replace(/\b(gte|gt|lt|lte)\b/g, (match) => `$${match}`); // regular expressions 
 
     // const query = Tour.find()
     //   .where('duration')

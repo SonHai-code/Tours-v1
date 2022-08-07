@@ -53,7 +53,7 @@ const userSchema = new mongoose.Schema({
 
 // Middleware before the moment the new user has saved in DB
 userSchema.pre('save', async function (next) {
-  // Only run this function if password was actually modified
+  // Only run this function if password was moddified (not on other update functions)
   if (!this.isModified('password')) return next();
 
   // Hash the password with the code of 12
@@ -79,14 +79,6 @@ userSchema.pre(/^find/, function (next) {
   next();
 });
 
-// Set the passwordChangeAt property
-userSchema.pre('save', function (next) {
-  if (!this.isModified('password') || this.isNew) return next(); // if the password was NOT modified or was created then NEXT()
-
-  this.passwordChangeAt = Date.now() - 1000;
-  next();
-});
-
 // Check the password of the user
 userSchema.methods.correctPassword = async function (
   candidatePassword,
@@ -95,7 +87,17 @@ userSchema.methods.correctPassword = async function (
   return await bcrypt.compare(candidatePassword, userPassword);
 };
 
+// If the users change their password -> set this moment to passwordChangeAt property
+userSchema.pre('save', function (next) {
+  if (!this.isModified('password') || this.isNew) return next(); // if the password was NOT modified or was created then NEXT()
+
+  this.passwordChangeAt = Date.now() - 1000;
+  next();
+});
+
 // Check whether user change the password recently
+// If you've changed your password recently -> you have to log in again to continue get access
+// JWTTimestamp: the time that token was created <=> the time user logged in
 userSchema.methods.changedPasswordAfter = function (JWTTimestamp) {
   if (this.passwordChangeAt) {
     const changedTimestamp = parseInt(
@@ -110,11 +112,11 @@ userSchema.methods.changedPasswordAfter = function (JWTTimestamp) {
 
 // Create new token for reset password
 userSchema.methods.createPasswordResetToken = function () {
-  const resetToken = crypto.randomBytes(32).toString('hex'); // create random string
+  const resetToken = crypto.randomBytes(32).toString('hex'); // create random data with length = 32 then convert to string type hex
 
   this.passwordResetToken = crypto // create reset password
-    .createHash('sha256')
-    .update(resetToken)
+    .createHash('sha256') // create and return a hash with option "sha256"
+    .update(resetToken) // update the hash content with given data
     .digest('hex');
 
   console.log({ resetToken }, this.passwordResetToken);

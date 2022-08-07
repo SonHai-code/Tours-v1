@@ -107,8 +107,13 @@ exports.getAllTours = catchAsync(async (req, res, next) => {
   });
 });
 
+// Get a single tour
 exports.getTour = catchAsync(async (req, res, next) => {
-  const tour = await Tour.findById(req.params.id);
+  // tour model has ref as user
+  const tour = await Tour.findById(req.params.id).populate({
+    path: 'guides',
+    select: '-__v -passwordChangeAt',
+  }); // unseen some fields
   // Tour.findOne({ _id: req.params.id })
   console.log(tour);
   if (!tour) {

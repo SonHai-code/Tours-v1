@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 const slugify = require('slugify');
-const validator = require('validator');
-
+// const User = require('./userModel');
+// const validator = require('validator');
 
 const tourSchema = new mongoose.Schema(
   {
@@ -86,6 +86,39 @@ const tourSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    startLocation: {
+      // GeoJSON: format for storing GEOGRAPHIC points and polygons
+      type: {
+        type: String,
+        default: 'Point',
+        enum: ['Point'],
+      },
+      coordinates: [Number], // coordinates[<longitude> <latitude>]
+      address: String,
+      description: String,
+    },
+    // To embedded another model -> have to create an array
+    locations: [
+      {
+        type: {
+          type: String,
+          default: 'Point',
+          enum: ['Point'],
+        },
+        coordinates: [Number],
+        address: String,
+        description: String,
+        day: Number,
+      },
+    ],
+    // Embeddeding via user'id
+    // guides: Array,
+    guides: [
+      {
+        type: mongoose.Schema.ObjectId,
+        ref: 'User',
+      },
+    ],
   },
   {
     toJSON: { virtuals: true },
@@ -98,9 +131,16 @@ tourSchema.virtual('durationWeek').get(function () {
 }); // virtual properties not be saved in controller
 
 // DOCUMENT MIDDLEWARE: run before the .save() and .create()
-// tourSchema.pre('save', function (next) {
-//   // middleware of mongoose
-//   this.slug = slugify(this.name, { lower: true });
+tourSchema.pre('save', function (next) {
+  // middleware of mongoose
+  this.slug = slugify(this.name, { lower: true });
+  next();
+});
+
+// Embedding user to tour via user'id in guides fields
+// tourSchema.pre('save', async function (next) {
+//   const guides = this.guides.map(async (userId) => await User.findById(userId)); // now guides is an ARRAY of Promises
+//   this.guides = await Promise.all(guides); // Promise.all takes an iterable of promises as an input, return a SINGLE Promise
 //   next();
 // });
 
@@ -110,20 +150,20 @@ tourSchema.virtual('durationWeek').get(function () {
 // });
 
 // QUERY MIDDLEWARE
-// tourSchema.pre(/^find/, function (next) {
-//   this.find({ secretTour: { $ne: true } });
-//   next();
-// });
+tourSchema.pre(/^find/, function (next) {
+  this.find({ secretTour: { $ne: true } });
+  next();
+});
 // tourSchema.pre(/^find/, function (docs, next) {
 //   console.log(docs);
 //   next();
 // });
 
 // AGGREGATION MIDDLEWARE
-// tourSchema.pre('aggregate', function (next) {
-//   this.pipeline().unshift({ $match: { secretTour: { $ne: true } } });
-//   next();
-// });
+tourSchema.pre('aggregate', function (next) {
+  this.pipeline().unshift({ $match: { secretTour: { $ne: true } } });
+  next();
+});
 
 const Tour = mongoose.model('Tour', tourSchema, 'Tours');
 module.exports = Tour;

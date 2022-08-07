@@ -10,25 +10,30 @@ const sendEmail = require('../utils/email');
 // Create token function
 const signToken = (id) =>
   jwt.sign({ id }, process.env.JWT_SECRET, {
-    expiresIn: process.env.JWT_EXPIRES_IN,
+    // Create jwt signature with document's id and SECRET that was stored on server
+    expiresIn: process.env.JWT_EXPIRES_IN, // Set the expires for JWT
   });
 
 // Send the token to the client via cookie
 const createAndSendToken = (res, statusCode, user) => {
+  // Create token
   const token = signToken(user._id);
 
+  // Set cookies options
   const cookieOptions = {
     expires: new Date(
       Date.now() + process.env.JWT_COOKIE_EXPIRES_IN * 24 * 90 * 60 * 60 * 1000
     ),
     httpOnly: true,
   };
-  if (process.env.NODE_ENV === 'production') cookieOptions.secure = true;
+  if (process.env.NODE_ENV === 'production') cookieOptions.secure = true; // If run on prod mode -> set secure = true
 
+  // Store JWT on cookies
   res.cookie('jwt', token, cookieOptions);
 
-  // Remove password from output 
+  // Remove password from output
   user.password = undefined;
+  // Send response
   res.status(statusCode).json({
     status: 'success',
     token,
@@ -41,6 +46,7 @@ exports.signup = catchAsync(async (req, res, next) => {
 
   // Create signature
   const token = signToken(newUser._id);
+
   res.status(201).json({
     status: 'success',
     token,
@@ -82,11 +88,12 @@ exports.protect = catchAsync(async (req, res, next) => {
   console.log(token);
   if (!token) {
     return next(
-      new AppError('You are not logged in! Please log in to get access.', 404)
+      new AppError('You are not logged in! Please log in to get access.', 404) // 404 means not found
     );
   }
   // 2) Vertification token
-  const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET);
+  const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET); //  Using promisify to return a Promise
+
   // 3) Check if the user still exists
   const currentUser = await User.findById(decoded.id);
   if (!currentUser) {
@@ -105,10 +112,11 @@ exports.protect = catchAsync(async (req, res, next) => {
   }
 
   // Grant access to protected route
-  req.user = currentUser;
+  req.user = currentUser; // When you've got access, you'll be able to access from req.user
   next();
 });
 
+// Only role="admin" allowed to access
 exports.restrictTo =
   (...roles) =>
   (req, res, next) => {
@@ -121,6 +129,7 @@ exports.restrictTo =
     next();
   };
 
+// Forgot password -> send new password to client's email
 exports.forgotPassword = catchAsync(async (req, res, next) => {
   // 1) Get the user base on email address
   const user = await User.findOne({ email: req.body.email });
@@ -128,9 +137,9 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
     return next(new AppError('There is no user with this email address!', 404));
   }
 
-  // 2) Generate the random rest password
-  const resetToken = user.createPasswordResetToken();
-  await user.save({ validateBeforeSave: true });
+  // 2) Generate the random reset password
+  const resetToken = user.createPasswordResetToken(); // create new pasword 
+  await user.save({ validateBeforeSave: true }); 
 
   // 3) Send it to user's email
   const resetURL = `${req.protocol}://${req.get(
@@ -159,11 +168,12 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
   });
 });
 
+
 exports.resetPassword = catchAsync(async (req, res, next) => {
   // 1) Get user based on the token
-  const hashedToken = crypto // hashed token is the password reset 
+  const hashedToken = crypto // hashed token is the password reset
     .createHash('sha256')
-    .update(req.param.token)
+    .update(req.params.token)
     .digest('hex');
 
   const user = User.findOne({
@@ -174,6 +184,7 @@ exports.resetPassword = catchAsync(async (req, res, next) => {
   if (!user) {
     return next(new AppError('Token is invalid or has expired', 400));
   }
+
   // 2) If the token has not expired, and there is user, set new password
   user.password = req.body.password;
   user.passwordConfirm = req.body.passwordConfirm;
@@ -181,9 +192,11 @@ exports.resetPassword = catchAsync(async (req, res, next) => {
   user.passwordResetExpires = undefined;
   await User.save();
   // 3) Update changePasswordAt property of the user (userModule.js)
+  
   // 4) Log the user in, send JWT
   createAndSendToken(res, 200, user);
 });
+
 
 exports.updatePassword = catchAsync(async (req, res, next) => {
   // 1) Get user from the collection
