@@ -116,7 +116,7 @@ const tourSchema = new mongoose.Schema(
     guides: [
       {
         type: mongoose.Schema.ObjectId,
-        ref: 'User',
+        ref: 'User', // create reference with another model
       },
     ],
   },
@@ -126,9 +126,10 @@ const tourSchema = new mongoose.Schema(
   }
 );
 
+// Create virtual properties not be saved in controller
 tourSchema.virtual('durationWeek').get(function () {
   return this.duration / 7;
-}); // virtual properties not be saved in controller
+});
 
 // DOCUMENT MIDDLEWARE: run before the .save() and .create()
 tourSchema.pre('save', function (next) {
@@ -144,6 +145,7 @@ tourSchema.pre('save', function (next) {
 //   next();
 // });
 
+// Post middleware executed AFTER all hooked method and all pre middleware has completed
 // tourSchema.post('save', function (doc, next) {
 //   console.log(doc);
 //   next();
@@ -158,6 +160,15 @@ tourSchema.pre(/^find/, function (next) {
 //   console.log(docs);
 //   next();
 // });
+
+// Child Referencing with populate method
+tourSchema.pre(/^find/, function (next) {
+  this.populate({
+    path: 'guides',
+    select: '-__v -passwordChangeAt', // unseen some unwanted fields
+  });
+  next();
+});
 
 // AGGREGATION MIDDLEWARE
 tourSchema.pre('aggregate', function (next) {
