@@ -120,6 +120,7 @@ const tourSchema = new mongoose.Schema(
       },
     ],
   },
+  // Make sure if there's virtual property, it will not display on DB
   {
     toJSON: { virtuals: true },
     toObject: { virtuals: true },
