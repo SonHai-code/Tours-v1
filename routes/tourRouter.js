@@ -10,6 +10,7 @@ const {
   getMonthlyPlan,
 } = require('../controllers/tourController');
 const { protect, restrictTo } = require('../controllers/authController');
+const { createReview } = require('../controllers/reviewController');
 
 const router = express.Router();
 
@@ -23,5 +24,15 @@ router
   .delete(protect, restrictTo('admin', 'lead-guide'), deleteTour)
   .patch(updateTour)
   .get(getTour);
+
+// NESTED ROUTES
+
+// GET /tours/fadfaa/reviews -> get all reviews about the tour
+// GET /tours/fagh231/reviews/414pad -> get a review from a tour
+
+// POST /tours/esm321/reviews -> create new review from tour route
+router
+  .route('/:tourId/reviews')
+  .post(protect, restrictTo('user'), createReview);
 
 module.exports = router;
