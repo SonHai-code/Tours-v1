@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 
 // Schema common types: String/Number/Date/Boolean/ObjectId/Array
-const reviewSchema = new mongoose.Schema([
+const reviewSchema = new mongoose.Schema(
   {
     review: {
       type: String,
@@ -36,8 +36,18 @@ const reviewSchema = new mongoose.Schema([
   {
     toJSON: { virtuals: true },
     toObject: { virtuals: true },
-  },
-]);
+  }
+);
+
+// QUERY MIDDLEWARES
+// Child Referencing with populate
+reviewSchema.pre(/^find/, function (next) {
+  this.populate({ path: 'tour', select: 'name' }).populate({
+    path: 'user',
+    select: 'name photo',
+  });
+  next();
+});
 
 const reviewModel = mongoose.model('review', reviewSchema, 'Reviews');
 

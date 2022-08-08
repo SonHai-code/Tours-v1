@@ -12,6 +12,7 @@ const globalErrorHandler = require('./controllers/errorController');
 
 const tourRouter = require('./routes/tourRouter');
 const userRouter = require('./routes/userRouter');
+const reviewRouter = require('./routes/reviewRouter');
 
 const app = express();
 
@@ -75,6 +76,7 @@ app.use((req, res, next) => {
 
 app.use('/api/v1/tours', tourRouter); // route is a kind of middleware
 app.use('/api/v1/users', userRouter);
+app.use('/api/v1/reviews', reviewRouter);
 
 // If there's no valid routers
 app.all('*', (req, res, next) => {
