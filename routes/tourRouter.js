@@ -10,7 +10,7 @@ const {
   getMonthlyPlan,
 } = require('../controllers/tourController');
 const { protect, restrictTo } = require('../controllers/authController');
-const { createReview } = require('../controllers/reviewController');
+const reviewRouter = require('./reviewRouter');
 
 const router = express.Router();
 
@@ -26,13 +26,6 @@ router
   .get(getTour);
 
 // NESTED ROUTES
-
-// GET /tours/fadfaa/reviews -> get all reviews about the tour
-// GET /tours/fagh231/reviews/414pad -> get a review from a tour
-
-// POST /tours/esm321/reviews -> create new review from tour route
-router
-  .route('/:tourId/reviews')
-  .post(protect, restrictTo('user'), createReview);
+router.use('/:tourId/reviews', reviewRouter); // Everytime specify with this url, using reviewRouter
 
 module.exports = router;
