@@ -132,6 +132,13 @@ tourSchema.virtual('durationWeek').get(function () {
   return this.duration / 7;
 });
 
+// Virtual populate to get Reviews info from Tour model
+tourSchema.virtual('reviews', {
+  ref: 'Review', // referencing to reviewModel
+  foreignField: 'tour', // MEANs: "tour" field in reviewModel link with "_id" in tourModel
+  localField: '_id',
+});
+
 // DOCUMENT MIDDLEWARE: run before the .save() and .create()
 tourSchema.pre('save', function (next) {
   // middleware of mongoose
@@ -162,7 +169,7 @@ tourSchema.pre(/^find/, function (next) {
 //   next();
 // });
 
-// Child Referencing with populate method
+// CHILD REFERENCING with populate method
 tourSchema.pre(/^find/, function (next) {
   this.populate({
     path: 'guides',

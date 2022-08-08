@@ -19,7 +19,7 @@ const reviewSchema = new mongoose.Schema(
       type: Date,
       default: Date.now(),
     },
-
+    // Parent referencing
     tour: {
       type: mongoose.Schema.ObjectId,
       ref: 'Tour',
@@ -40,15 +40,19 @@ const reviewSchema = new mongoose.Schema(
 );
 
 // QUERY MIDDLEWARES
-// Child Referencing with populate
+// Parent Referencing with populate
 reviewSchema.pre(/^find/, function (next) {
-  this.populate({ path: 'tour', select: 'name' }).populate({
+  // this.populate({ path: 'tour', select: 'name' }).populate({
+  //   path: 'user',
+  //   select: 'name photo',
+  // });
+  this.populate({
     path: 'user',
     select: 'name photo',
   });
   next();
 });
 
-const reviewModel = mongoose.model('review', reviewSchema, 'Reviews');
+const Review = mongoose.model('Review', reviewSchema, 'Reviews');
 
-module.exports = reviewModel;
+module.exports = Review;

@@ -110,7 +110,7 @@ exports.getAllTours = catchAsync(async (req, res, next) => {
 // Get a single tour
 exports.getTour = catchAsync(async (req, res, next) => {
   // tour model has ref as user
-  const tour = await Tour.findById(req.params.id);
+  const tour = await Tour.findById(req.params.id).populate('reviews');
   // Tour.findOne({ _id: req.params.id })
   console.log(tour);
   if (!tour) {
