@@ -1,7 +1,7 @@
 const User = require('../models/userModel');
 const AppError = require('../utils/appError');
 const catchAsync = require('../utils/catchAsync');
-const { deleteOne } = require('./handleFactory');
+const { deleteOne, updateOne, createOne } = require('./handleFactory');
 
 // Filter out unwanted fields are not allowed to update
 const filterObj = (obj, ...allowedFields) => {
@@ -25,13 +25,6 @@ exports.getAllUsers = catchAsync(async (req, res, next) => {
   });
 });
 
-exports.createUser = (req, res) => {
-  res.status(500).json({
-    status: 'error',
-    message: 'The route is not yet defined !',
-  });
-};
-
 exports.getUser = catchAsync(async (req, res, next) => {
   const user = await User.findById(req.params.id);
   if (!user)
@@ -44,16 +37,16 @@ exports.getUser = catchAsync(async (req, res, next) => {
   });
 });
 
+// Create an user
+exports.createUser = createOne(User);
+
 // Delete an user
 exports.deleteUser = deleteOne(User);
 
-exports.updateUser = (req, res) => {
-  res.status(500).json({
-    status: 'error',
-    message: 'The route is not yet defined !',
-  });
-};
+// Update an user
+exports.updateUser = updateOne(User);
 
+// Update your own account
 exports.updateMe = catchAsync(async (req, res, next) => {
   // 1) Create error if the user POST password data
   if (req.body.password || req.body.passwordConfirm) {

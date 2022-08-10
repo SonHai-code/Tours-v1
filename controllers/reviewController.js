@@ -1,6 +1,6 @@
 const catchAsync = require('../utils/catchAsync');
 const Review = require('../models/reviewModel');
-const { deleteOne } = require('./handleFactory');
+const { deleteOne, updateOne, createOne } = require('./handleFactory');
 
 exports.getAllReviews = catchAsync(async (req, res, next) => {
   // Query Review Document following tourId
@@ -17,19 +17,13 @@ exports.getAllReviews = catchAsync(async (req, res, next) => {
   });
 });
 
-exports.createReview = catchAsync(async (req, res, next) => {
+exports.setTourUserIds = catchAsync(async (req, res, next) => {
   // Allow nested routes
   if (!req.body.tour) req.body.tour = req.params.tourId; // get tour id from req.params
   if (!req.body.user) req.body.user = req.user.id; // get user if from protect mw
-
-  const newReview = await Review.create(req.body);
-  res.status(201).json({
-    status: 'sucess',
-    message: 'Review has been created',
-    data: {
-      review: newReview,
-    },
-  });
+  next();
 });
 
+exports.createReview = createOne(Review);
 exports.deleteReview = deleteOne(Review);
+exports.updateReview = updateOne(Review);
