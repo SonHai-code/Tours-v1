@@ -14,6 +14,7 @@ const reviewRouter = require('./reviewRouter');
 
 const router = express.Router();
 
+// ROUTES
 // router.param('id', checkID);
 router.route('/monthly-plan/:year').get(getMonthlyPlan);
 router.route('/tour-stats').get(getTourStats);
