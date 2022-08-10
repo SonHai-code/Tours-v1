@@ -6,12 +6,16 @@ const {
   deleteReview,
   updateReview,
   setTourUserIds,
+  getReview,
 } = require('../controllers/reviewController');
 
 const router = express.Router({ mergeParams: true }); // Setting to use tourId
 
 // Get all reviews
 router.get('/', getAllReviews);
+
+// Get a review
+router.get('/:id', getReview);
 
 // Create a review
 // User must have log in with role 'user' to add a review

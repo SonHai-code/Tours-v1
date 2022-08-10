@@ -1,7 +1,13 @@
 const User = require('../models/userModel');
 const AppError = require('../utils/appError');
 const catchAsync = require('../utils/catchAsync');
-const { deleteOne, updateOne, createOne } = require('./handleFactory');
+const {
+  deleteOne,
+  updateOne,
+  createOne,
+  getOne,
+  getAll,
+} = require('./handleFactory');
 
 // Filter out unwanted fields are not allowed to update
 const filterObj = (obj, ...allowedFields) => {
@@ -12,30 +18,11 @@ const filterObj = (obj, ...allowedFields) => {
   return newObj;
 };
 
-exports.getAllUsers = catchAsync(async (req, res, next) => {
-  const users = await User.find();
+// Get all users
+exports.getAllUsers = getAll(User);
 
-  // SEND RESPONE
-  res.status(200).json({
-    status: 'success',
-    result: users.length,
-    data: {
-      users,
-    },
-  });
-});
-
-exports.getUser = catchAsync(async (req, res, next) => {
-  const user = await User.findById(req.params.id);
-  if (!user)
-    return next(new AppError('Cannot found the user with this id', 404));
-  res.status(200).json({
-    status: 'success',
-    data: {
-      user,
-    },
-  });
-});
+// Get an user
+exports.getUser = getOne(User);
 
 // Create an user
 exports.createUser = createOne(User);

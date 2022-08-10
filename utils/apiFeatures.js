@@ -12,8 +12,8 @@ class APIFeatures {
     excludedFields.forEach((el) => delete queryObj[el]); // Remove some excludedFields from queryObj
 
     // 2) Advanced Filtering
-    let queryStr = JSON.stringify(queryObj); // object --> string 
-    queryStr = queryStr.replace(/\b(gte|gt|lt|lte)\b/g, (match) => `$${match}`); // regular expressions 
+    let queryStr = JSON.stringify(queryObj); // object --> string
+    queryStr = queryStr.replace(/\b(gte|gt|lt|lte)\b/g, (match) => `$${match}`); // regular expressions
 
     // const query = Tour.find()
     //   .where('duration')
@@ -39,10 +39,10 @@ class APIFeatures {
   limitFields() {
     // 4) Fields limiting
     if (this.queryString.fields) {
-      const fields = this.queryString.fields.split(',').join(' ');
-      this.query = this.query.select(fields);
+      const fields = this.queryString.fields.split(',').join(' '); // fields is a string
+      this.query = this.query.select(fields); // this.query is Doc.find(); this.queryString is req.query
     } else {
-      this.query = this.query.select('-__v');
+      this.query = this.query.select('-__v'); 
     }
     return this;
   }

@@ -1,9 +1,13 @@
 // const fs = require('fs');
 const Tour = require('../models/tourModel');
-const APIFeatures = require('../utils/apiFeatures');
 const catchAsync = require('../utils/catchAsync');
-const AppError = require('../utils/appError');
-const { deleteOne, updateOne, createOne } = require('./handleFactory');
+const {
+  deleteOne,
+  updateOne,
+  createOne,
+  getOne,
+  getAll,
+} = require('./handleFactory');
 
 exports.getMonthlyPlan = catchAsync(async (req, res, next) => {
   const year = req.params.year * 1; // year = 2021
@@ -89,44 +93,8 @@ exports.aliasTopTours = (req, res, next) => {
   next();
 };
 
-exports.getAllTours = catchAsync(async (req, res, next) => {
-  // EXECUTE QUERY
-  const features = new APIFeatures(Tour.find(), req.query)
-    .filter()
-    .limitFields()
-    .paginate()
-    .sort();
-  const tours = await features.query;
-
-  // SEND RESPONE
-  res.status(200).json({
-    status: 'success',
-    result: tours.length,
-    data: {
-      tours,
-    },
-  });
-});
-
-// Get a single tour
-exports.getTour = catchAsync(async (req, res, next) => {
-  // tour model has ref as user
-  const tour = await Tour.findById(req.params.id).populate('reviews');
-  // Tour.findOne({ _id: req.params.id })
-  console.log(tour);
-  if (!tour) {
-    console.log('In if block!');
-    return next(new AppError('No tour found with that ID', 404));
-  }
-
-  res.status(200).json({
-    status: 'success',
-    data: {
-      tour,
-    },
-  });
-});
-
+exports.getAllTours = getAll(Tour);
+exports.getTour = getOne(Tour, { path: 'reviews' }); // reviews field is virtual that cannot be seen on DB
 exports.deleteTour = deleteOne(Tour);
 exports.updateTour = updateOne(Tour);
 exports.createTour = createOne(Tour);
