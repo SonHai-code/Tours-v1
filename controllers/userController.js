@@ -1,6 +1,7 @@
 const User = require('../models/userModel');
 const AppError = require('../utils/appError');
 const catchAsync = require('../utils/catchAsync');
+const { deleteOne } = require('./handleFactory');
 
 // Filter out unwanted fields are not allowed to update
 const filterObj = (obj, ...allowedFields) => {
@@ -31,19 +32,20 @@ exports.createUser = (req, res) => {
   });
 };
 
-exports.getUser = (req, res) => {
-  res.status(500).json({
-    status: 'error',
-    message: 'The route is not yet defined !',
+exports.getUser = catchAsync(async (req, res, next) => {
+  const user = await User.findById(req.params.id);
+  if (!user)
+    return next(new AppError('Cannot found the user with this id', 404));
+  res.status(200).json({
+    status: 'success',
+    data: {
+      user,
+    },
   });
-};
+});
 
-exports.deleteUser = (req, res) => {
-  res.status(500).json({
-    status: 'error',
-    message: 'The route is not yet defined !',
-  });
-};
+// Delete an user
+exports.deleteUser = deleteOne(User);
 
 exports.updateUser = (req, res) => {
   res.status(500).json({

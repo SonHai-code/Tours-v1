@@ -1,5 +1,6 @@
 const catchAsync = require('../utils/catchAsync');
 const Review = require('../models/reviewModel');
+const { deleteOne } = require('./handleFactory');
 
 exports.getAllReviews = catchAsync(async (req, res, next) => {
   // Query Review Document following tourId
@@ -30,3 +31,5 @@ exports.createReview = catchAsync(async (req, res, next) => {
     },
   });
 });
+
+exports.deleteReview = deleteOne(Review);
