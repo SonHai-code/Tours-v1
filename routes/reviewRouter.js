@@ -11,6 +11,8 @@ const {
 
 const router = express.Router({ mergeParams: true }); // Setting to use tourId
 
+router.use(protect);
+
 // Get all reviews
 router.get('/', getAllReviews);
 
@@ -19,18 +21,12 @@ router.get('/:id', getReview);
 
 // Create a review
 // User must have log in with role 'user' to add a review
-router.post(
-  '/',
-  protect,
-  restrictTo('user', 'admin'),
-  setTourUserIds,
-  createReview
-);
+router.post('/', restrictTo('user'), setTourUserIds, createReview);
 
 // Delete review
-router.delete('/:id', deleteReview);
+router.delete('/:id', restrictTo('user', 'admin'), deleteReview);
 
 // Update review
-router.put('/:id', updateReview);
+router.put('/:id', restrictTo('user', 'admin'), updateReview);
 
 module.exports = router;

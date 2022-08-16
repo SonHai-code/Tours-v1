@@ -33,6 +33,12 @@ exports.deleteUser = deleteOne(User);
 // Update an user
 exports.updateUser = updateOne(User);
 
+// Get current user
+exports.getMe = (req, res, next) => {
+  req.params.id = req.user.id;
+  next();
+};
+
 // Update your own account
 exports.updateMe = catchAsync(async (req, res, next) => {
   // 1) Create error if the user POST password data
@@ -61,10 +67,11 @@ exports.updateMe = catchAsync(async (req, res, next) => {
 
 // Just delete user from client, NOT delete it from DB
 exports.deleteMe = catchAsync(async (req, res, next) => {
-  await User.findByIdAndUpdate(req.user.id, { active: false });
+  await User.findByIdAndDelete(req.user.id, { active: false });
 
   res.status(204).json({
     status: 'sucess',
+    message: 'Deleted Successful!',
     data: null,
   });
 });

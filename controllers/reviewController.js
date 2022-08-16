@@ -14,7 +14,6 @@ exports.setTourUserIds = catchAsync(async (req, res, next) => {
   if (!req.body.user) req.body.user = req.user.id; // get user if from protect mw
   next();
 });
-
 exports.getAllReviews = getAll(Review);
 exports.createReview = createOne(Review);
 exports.deleteReview = deleteOne(Review);

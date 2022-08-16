@@ -16,14 +16,25 @@ const router = express.Router();
 
 // ROUTES
 // router.param('id', checkID);
-router.route('/monthly-plan/:year').get(getMonthlyPlan);
+
+// TOUR QUERY
+router
+  .route('/monthly-plan/:year')
+  .get(protect, restrictTo('admin', 'lead-guide', 'guide'), getMonthlyPlan);
 router.route('/tour-stats').get(getTourStats);
 router.route('/top-5-tours').get(aliasTopTours, getAllTours);
-router.route('/').get(protect, getAllTours).post(createTour);
+
+// GET ALL TOURS - CREATE TOUR
+router
+  .route('/')
+  .get(getAllTours)
+  .post(protect, restrictTo('admin', 'lead-guide'), createTour);
+
+// DELETE - UPDATE - GET SINGLE TOUR
 router
   .route('/:id')
   .delete(protect, restrictTo('admin', 'lead-guide'), deleteTour)
-  .patch(updateTour)
+  .patch(protect, restrictTo('admin', 'lead-guide'), updateTour)
   .get(getTour);
 
 // NESTED ROUTES
