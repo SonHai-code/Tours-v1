@@ -127,12 +127,16 @@ const tourSchema = new mongoose.Schema(
   }
 );
 
-// Create virtual properties not be saved in controller
+// Create index for tourModel
+tourSchema.index({ price: 1, ratingsAverage: -1 }); // 1 means ascending order && -1 means descending order
+tourSchema.index({ plug: 1 }); // 1 means ascending order && -1 means descending order
+
+// Create VIRTUAL properties not be saved in controller
 tourSchema.virtual('durationWeek').get(function () {
   return this.duration / 7;
 });
 
-// Virtual populate to get Reviews info from Tour model
+// VIRTUAL populate to get Reviews info from Tour model
 tourSchema.virtual('reviews', {
   ref: 'Review', // referencing to reviewModel
   foreignField: 'tour', // MEANs: "tour" field in reviewModel link with "_id" in tourModel

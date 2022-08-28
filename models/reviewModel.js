@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const Tour = require('./tourModel');
 
 // Schema common types: String/Number/Date/Boolean/ObjectId/Array
 const reviewSchema = new mongoose.Schema(
@@ -51,6 +52,40 @@ reviewSchema.pre(/^find/, function (next) {
     select: 'name photo',
   });
   next();
+});
+
+// STATIC FUNCTION to caculate the ratingsAverage
+// Adding a static function to your schema, and Mongoose attaches it to any model you compile with that schema
+reviewSchema.statics.calcRatingsAverage = async function (tourId) {
+  // Review model has field 'tour' that contains tourId
+  // this now point to the module Review
+  const stats = await this.aggregate([
+    // stats is an array
+    {
+      $match: { tour: tourId },
+    },
+    {
+      $group: {
+        _id: '$tour',
+        nRating: { $sum: 1 },
+        avgRating: { $avg: '$rating' },
+      },
+    },
+  ]);
+
+  console.log(stats);
+
+  // Caculate ratingsQuantity and ratingsAverage of Tour Module
+  await Tour.findByIdAndUpdate(tourId, {
+    ratingsQuantity: stats[0].nRating,
+    ratingsAverage: stats[0].avgRating,
+  });
+};
+
+// Just do the calculation after data was saved in DB
+reviewSchema.post('save', function () {
+  // this point to current document
+  this.constructor.calcRatingsAverage(this.tour); // this.constructor <=> Review module
 });
 
 const Review = mongoose.model('Review', reviewSchema, 'Reviews');
