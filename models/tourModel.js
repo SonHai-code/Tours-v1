@@ -42,6 +42,7 @@ const tourSchema = new mongoose.Schema(
       // Validators
       min: [1, 'Rating must above 1.0'],
       max: [5, 'Rating must below 5.0'],
+      set: (val) => Math.round(val * 10) / 10, // exp: 4.66666 -> 4.7
     },
     ratingsQuantity: {
       type: Number,
@@ -130,6 +131,7 @@ const tourSchema = new mongoose.Schema(
 // Create index for tourModel
 tourSchema.index({ price: 1, ratingsAverage: -1 }); // 1 means ascending order && -1 means descending order
 tourSchema.index({ plug: 1 }); // 1 means ascending order && -1 means descending order
+tourSchema.index({ startLocation: '2dsphere' });
 
 // Create VIRTUAL properties not be saved in controller
 tourSchema.virtual('durationWeek').get(function () {
@@ -183,10 +185,10 @@ tourSchema.pre(/^find/, function (next) {
 });
 
 // AGGREGATION MIDDLEWARE
-tourSchema.pre('aggregate', function (next) {
-  this.pipeline().unshift({ $match: { secretTour: { $ne: true } } });
-  next();
-});
+// tourSchema.pre('aggregate', function (next) {
+//   this.pipeline().unshift({ $match: { secretTour: { $ne: true } } });
+//   next();
+// });
 
 const Tour = mongoose.model('Tour', tourSchema, 'Tours');
 module.exports = Tour;

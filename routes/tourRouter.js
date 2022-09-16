@@ -8,6 +8,8 @@ const {
   aliasTopTours,
   getTourStats,
   getMonthlyPlan,
+  getToursWithin,
+  getDistances,
 } = require('../controllers/tourController');
 const { protect, restrictTo } = require('../controllers/authController');
 const reviewRouter = require('./reviewRouter');
@@ -23,6 +25,14 @@ router
   .get(protect, restrictTo('admin', 'lead-guide', 'guide'), getMonthlyPlan);
 router.route('/tour-stats').get(getTourStats);
 router.route('/top-5-tours').get(aliasTopTours, getAllTours);
+
+// GEOSPATIAL QUERY
+// Get all tours which located within a round rage
+router
+  .route('/tours-within/:distance/center/:latlng/unit/:unit')
+  .get(getToursWithin);
+
+router.route('/distances/:latlng/unit/:unit').get(getDistances);
 
 // GET ALL TOURS - CREATE TOUR
 router

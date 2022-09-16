@@ -11,6 +11,7 @@ const {
 
 const router = express.Router({ mergeParams: true }); // Setting to use tourId
 
+// Only users have been loggined having permission to get their own reviews
 router.use(protect);
 
 // Get all reviews
@@ -27,6 +28,6 @@ router.post('/', restrictTo('user'), setTourUserIds, createReview);
 router.delete('/:id', restrictTo('user', 'admin'), deleteReview);
 
 // Update review
-router.put('/:id', restrictTo('user', 'admin'), updateReview);
+router.put('/:id', restrictTo('user', 'admin'), updateReview); 
 
 module.exports = router;

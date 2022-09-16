@@ -67,7 +67,7 @@ exports.getAll = (Model) =>
     // To allow for nested route reviews on tour
     // Query Review Document following tourId
     let filter = {};
-    if (req.params.tourId) filter = { tour: req.params.tourId };
+    if (req.params.tourId) filter = { tour: req.params.tourId }; // if param contains tourId then send review of that tour
 
     // EXECUTE QUERY
     const features = new APIFeatures(Model.find(filter), req.query)
@@ -75,7 +75,8 @@ exports.getAll = (Model) =>
       .limitFields()
       .paginate()
       .sort();
-    const docs = await features.query.explain();
+    const docs = await features.query;
+    // const docs = await features.query.explain();
 
     // SEND RESPONE
     res.status(200).json({

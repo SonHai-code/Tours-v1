@@ -40,6 +40,9 @@ const reviewSchema = new mongoose.Schema(
   }
 );
 
+// Adding review index
+reviewSchema.index({ tour: 1, user: 1 }, { unique: true });
+
 // QUERY MIDDLEWARES
 // Parent Referencing with populate
 reviewSchema.pre(/^find/, function (next) {
@@ -76,16 +79,45 @@ reviewSchema.statics.calcRatingsAverage = async function (tourId) {
   console.log(stats);
 
   // Caculate ratingsQuantity and ratingsAverage of Tour Module
-  await Tour.findByIdAndUpdate(tourId, {
-    ratingsQuantity: stats[0].nRating,
-    ratingsAverage: stats[0].avgRating,
-  });
+  if (stats.length > 0) {
+    await Tour.findByIdAndUpdate(tourId, {
+      ratingsQuantity: stats[0].nRating,
+      ratingsAverage: stats[0].avgRating,
+    });
+  } else {
+    await Tour.findByIdAndUpdate(tourId, {
+      ratingsQuantity: 0,
+      ratingsAverage: 4.5,
+    });
+  }
 };
 
 // Just do the calculation after data was saved in DB
 reviewSchema.post('save', function () {
   // this point to current document
   this.constructor.calcRatingsAverage(this.tour); // this.constructor <=> Review module
+});
+
+// findByIdAndUpdate
+// findByIdAndDelete
+// ---> Those are query middlewares
+
+// Create Pre-Middleware for the event
+// findOneAnd is replaced for findByIdAndUpdate and findByIdAndDelete
+// BEFORE THE EVENT, SAVE THE QUERY TO 'r' variable
+reviewSchema.pre(/^findOneAnd/, async function (next) {
+  // this is refer to the current document
+  // Create r to store query of the document
+  this.r = await this.findOne(); // Save the query to 'this' property to use it on POST method
+  // console.log(this.r);
+  next();
+});
+
+// AFTER THE QUERY HAS BEEN FINISHED
+// then invoke the method calcRatingsAverage()
+reviewSchema.post(/^findOneAnd/, async function () {
+  // await this.findOne() does not work here because query has already executed
+  await this.r.constructor.calcRatingsAverage(this.r.tour);
 });
 
 const Review = mongoose.model('Review', reviewSchema, 'Reviews');
