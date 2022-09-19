@@ -22,7 +22,7 @@ exports.updateOne = (Model) =>
       new: true,
       runValidators: true,
     });
-    if (!doc) return next(AppError('No document with that ID', 404));
+    if (!doc) return next(new AppError('No document with that ID', 404));
     res.status(200).json({
       status: 'success',
       data: {

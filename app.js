@@ -13,19 +13,35 @@ const globalErrorHandler = require('./controllers/errorController');
 const tourRouter = require('./routes/tourRouter');
 const userRouter = require('./routes/userRouter');
 const reviewRouter = require('./routes/reviewRouter');
+const viewRouter = require('./routes/viewRoutes');
 
 const app = express();
 
-// Set sever-side rendering
-// app.set('view engine', 'pug');
-// app.set('views', path.join(__dirname, 'views'));
+// SET SERVER-SIDE RENDERING
+app.set('view engine', 'pug');
+app.set('views', path.join(__dirname, 'views'));
 
 // 1.MIDDLEWARES
 // Serving static files
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Set security HTTP headers
-app.use(helmet());
+// app.use(helmet());
+app.use(
+  helmet({
+    crossOriginEmbedderPolicy: false,
+    crossOriginResourcePolicy: {
+      crossOrigin: ['*'],
+      allowOrigins: ['*'],
+    },
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ['*'],
+        scriptSrc: ["* data: 'unsafe-eval' 'unsafe-inline' blob:"],
+      },
+    },
+  })
+);
 
 // Limit requests from the API
 const limiter = rateLimit({
@@ -70,13 +86,10 @@ app.use((req, res, next) => {
 });
 
 // 3. ROUTES
-// app.use('/', (req, res) => {
-//   res.status(200).render('base');
-// });
-
 app.use('/api/v1/tours', tourRouter); // route is a kind of middleware
 app.use('/api/v1/users', userRouter);
 app.use('/api/v1/reviews', reviewRouter);
+app.use('/', viewRouter); // router to view the server
 
 // If there's no valid routers
 app.all('*', (req, res, next) => {
