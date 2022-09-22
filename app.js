@@ -10,6 +10,8 @@ const hpp = require('hpp');
 const AppError = require('./utils/appError');
 const globalErrorHandler = require('./controllers/errorController');
 
+const cookieParser = require('cookie-parser');
+
 const tourRouter = require('./routes/tourRouter');
 const userRouter = require('./routes/userRouter');
 const reviewRouter = require('./routes/reviewRouter');
@@ -26,13 +28,14 @@ app.set('views', path.join(__dirname, 'views'));
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Set security HTTP headers
-// app.use(helmet());
+app.use(helmet());
 app.use(
   helmet({
     crossOriginEmbedderPolicy: false,
     crossOriginResourcePolicy: {
-      crossOrigin: ['*'],
       allowOrigins: ['*'],
+      crossOrigins: 'anonymous',
+      accessControlAllowOrigin: '*',
     },
     contentSecurityPolicy: {
       directives: {
@@ -43,12 +46,23 @@ app.use(
   })
 );
 
-// Limit requests from the API
+// CORS enable on the Server
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*'); // update to match the domain you will make the request from
+  res.header(
+    'Access-Control-Allow-Headers',
+    'Origin, X-Requested-With, Content-Type, Accept'
+  );
+  next();
+});
+
+// LIMIT REQUESTS NUMBER OF API
 const limiter = rateLimit({
   max: 100,
   windowMs: 60 * 60 * 1000,
   message: 'Too many request from this IP. Please try again after 1 hour!',
 });
+
 app.use('/api', limiter);
 
 // Body parser, reading data from req,body()
