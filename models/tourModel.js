@@ -172,8 +172,7 @@ tourSchema.pre(/^find/, function (next) {
 });
 // tourSchema.pre(/^find/, function (docs, next) {
 //   console.log(docs);
-//   next();
-// });
+
 
 // CHILD REFERENCING with populate method
 tourSchema.pre(/^find/, function (next) {
@@ -191,4 +190,12 @@ tourSchema.pre(/^find/, function (next) {
 // });
 
 const Tour = mongoose.model('Tour', tourSchema, 'Tours');
+
+
+
+
 module.exports = Tour;
+
+
+
+

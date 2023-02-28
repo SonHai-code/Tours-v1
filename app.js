@@ -7,10 +7,11 @@ const mongoSanitize = require('express-mongo-sanitize');
 const xss = require('xss-clean');
 const hpp = require('hpp');
 
+const cookieParser = require('cookie-parser');
+
+const cors = require('cors');
 const AppError = require('./utils/appError');
 const globalErrorHandler = require('./controllers/errorController');
-
-const cookieParser = require('cookie-parser');
 
 const tourRouter = require('./routes/tourRouter');
 const userRouter = require('./routes/userRouter');
@@ -27,22 +28,29 @@ app.set('views', path.join(__dirname, 'views'));
 // Serving static files
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Set security HTTP headers
-app.use(helmet());
+// Set security HTTP headers - helmet()
 app.use(
   helmet({
     crossOriginEmbedderPolicy: false,
     crossOriginResourcePolicy: {
-      allowOrigins: ['*'],
+      allowOrigins: '*',
       crossOrigins: 'anonymous',
       accessControlAllowOrigin: '*',
     },
-    contentSecurityPolicy: {
-      directives: {
-        defaultSrc: ['*'],
-        scriptSrc: ["* data: 'unsafe-eval' 'unsafe-inline' blob:"],
-      },
-    },
+    accessControlAllowHeaders: [
+      'Origin',
+      'X-Requested-with',
+      'Content-Type',
+      'Accept',
+    ],
+    xFrameOptions: 'SAMEORIGIN',
+    // contentSecurityPolicy: {
+    //   directives: {
+    //     defaultSrc: ['*'],
+    //     scriptSrc: ["* data: 'unsafe-eval' 'unsafe-inline' blob:"],
+    //   },
+    // },
+    contentSecurityPolicy: false,
   })
 );
 
@@ -53,10 +61,11 @@ app.use((req, res, next) => {
     'Access-Control-Allow-Headers',
     'Origin, X-Requested-With, Content-Type, Accept'
   );
+  res.header('X-Frame-Options', 'SAMEORIGIN');
   next();
 });
 
-// LIMIT REQUESTS NUMBER OF API
+// LIMIT REQUESTS NUMBER OF API - GET MAXIMUM REQUESTS FROM A REQUEST
 const limiter = rateLimit({
   max: 100,
   windowMs: 60 * 60 * 1000,
@@ -67,6 +76,9 @@ app.use('/api', limiter);
 
 // Body parser, reading data from req,body()
 app.use(express.json());
+
+// Cookie parser - Parse the datas from the cookies
+app.use(cookieParser());
 
 // Data sanitization against NoSQL query injection
 app.use(mongoSanitize());
@@ -96,6 +108,7 @@ if (process.env.NODE_ENV === 'development') {
 // MIDDLEWARE to set time request
 app.use((req, res, next) => {
   req.requestTime = new Date().toISOString();
+  console.log(req.cookies);
   next();
 });
 
@@ -107,15 +120,15 @@ app.use('/', viewRouter); // router to view the server
 
 // If there's no valid routers
 app.all('*', (req, res, next) => {
-  // res.status(404).json({
-  //   status: 'fail',
-  //   message: `Can't find ${req.originalUrl} on this server!`,
-  // });
-  // const err = new Error(`Can't find ${req.originalUrl} on this server!`); // err.message
-  // err.statusCode = 404;
-  // err.status = 'fail';
   next(new AppError(`Can't find ${req.originalUrl} on this server!`, 404));
 });
+
+// Handling Cross-Origin Resource Sharing(CORs) for my API
+app.use(
+  cors({
+    origin: 'http://localhost:3000',
+  })
+);
 
 app.use(globalErrorHandler);
 

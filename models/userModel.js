@@ -29,9 +29,10 @@ const userSchema = new mongoose.Schema({
     minlength: [8, 'Your password must have at least 8 characters'],
     select: false,
   },
-  passwordConfirm: { // Just use password confirm in the case that user sign in 
+  passwordConfirm: {
+    // Just use password confirm in the case that user sign in
     type: String,
-    // required: [true, 'Please confirm your password!'], 
+    // required: [true, 'Please confirm your password!'],
     validate: {
       // Only work on CREATE and SAVE
       // val is the value of the passwordConfirm

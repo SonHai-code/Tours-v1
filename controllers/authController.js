@@ -1,7 +1,6 @@
 const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 const { promisify } = require('util');
-// const bcrypt = require('bcryptjs');
 const AppError = require('../utils/appError');
 const User = require('../models/userModel');
 const catchAsync = require('../utils/catchAsync');
@@ -57,16 +56,20 @@ exports.signup = catchAsync(async (req, res, next) => {
 });
 
 exports.login = catchAsync(async (req, res, next) => {
+  // Get email and password from req.body that user type in
   const { email, password } = req.body;
 
   // 1) Check if email and password exist
   if (!email || !password) {
-    return next(new AppError('Please provide your email and password!', 400));
+    return next(
+      new AppError('Please provide both your email and password!', 400)
+    );
   }
 
-  // 2) Check if the password is correct
+  // 2) Check if the password is correct depend on the email
   const user = await User.findOne({ email }).select('+password');
 
+  // if either email or password is incorrect
   if (!user || !(await user.correctPassword(password, user.password))) {
     return next(new AppError('Incorrect email or password!', 401));
   }
@@ -74,6 +77,14 @@ exports.login = catchAsync(async (req, res, next) => {
   // 3) If everything is ok, send token to the client
   createAndSendToken(res, 200, user);
 });
+
+exports.logout = (req, res) => {
+  res.cookie('jwt', 'loggedout', {
+    expires: new Date(Date.now() + 10 * 1000), // Set expire for the token in 10 seconds
+    httpOnly: true,
+  });
+  res.status(200).json({ status: 'success' });
+};
 
 // protect routes -> user must log in to get access the datas
 exports.protect = catchAsync(async (req, res, next) => {
@@ -84,6 +95,9 @@ exports.protect = catchAsync(async (req, res, next) => {
     req.headers.authorization.startsWith('Bearer')
   ) {
     token = req.headers.authorization.split(' ')[1]; // get the token
+  } // Authentication user base on jwt
+  else if (req.cookie.jwt) {
+    token = req.cookie.jwt;
   }
   console.log(token);
   if (!token) {
@@ -113,6 +127,43 @@ exports.protect = catchAsync(async (req, res, next) => {
 
   // Grant access to protected route
   req.user = currentUser; // When you've got access, you'll be able to access from req.user
+  next();
+});
+
+// Only for rendering the page, no error occurs
+exports.isLoggedIn = catchAsync(async (req, res, next) => {
+  if (req.cookies.jwt) {
+    try {
+      // 1) Vertification token
+      const decoded = await promisify(jwt.verify)(
+        req.cookies.jwt,
+        process.env.JWT_SECRET
+      ); //  Using promisify to return a Promise
+
+      // 2) Check if the user still exists
+      const currentUser = await User.findById(decoded.id);
+      if (!currentUser) {
+        return next(
+          new AppError(
+            'The user belonging to this token user does no longer exist!',
+            401
+          )
+        );
+      }
+
+      // 3) Check if user changed password after the token was issued
+      if (currentUser.changedPasswordAfter(decoded.iat)) {
+        return next();
+      }
+
+      // There is a logged in user
+      // put the currentUser into locals
+      res.locals.user = currentUser;
+      return next();
+    } catch (err) {
+      return next();
+    }
+  }
   next();
 });
 
