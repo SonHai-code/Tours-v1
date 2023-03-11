@@ -55,6 +55,7 @@ app.use(
   })
 );
 
+// User compression
 app.use(compression());
 
 // CORS enable on the Server
