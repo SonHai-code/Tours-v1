@@ -1,29 +1,56 @@
+/* eslint-disable no-lonely-if */
 const AppError = require('../utils/appError');
 
-const sendErrorDev = (err, res) => {
-  res.status(err.statusCode).json({
-    status: err.status,
-    error: err,
-    message: err.message,
-    stack: err.stack,
-  });
-};
-
-const sendErrorProd = (err, res) => {
-  // Operational, trusted error: send message to the clients
-  if (err.isOperational) {
+const sendErrorDev = (err, req, res) => {
+  // API
+  if (req.originalUrl.startsWith('/api')) {
     res.status(err.statusCode).json({
       status: err.status,
+      error: err,
       message: err.message,
+      stack: err.stack,
     });
-
-    // Programming or other unknown error: don't leak to the clients
   } else {
-    console.error('ERROR!', err);
-    res.status(500).json({
-      status: 'error',
-      message: 'Something went wrong!',
+    // Rendering the website
+    res.status(err.statusCode).render('error', {
+      title: 'Error!',
+      msg: err.message,
     });
+  }
+};
+
+const sendErrorProd = (err, req, res) => {
+  // API
+  if (req.originalUrl.startsWith('/api')) {
+    // Operational, trusted error: send message to the clients
+    if (err.isOperational) {
+      res.status(err.statusCode).json({
+        status: err.status,
+        message: err.message,
+      });
+
+      // Programming or other unknown error: don't leak to the clients
+    } else {
+      console.error('ERROR!', err);
+      res.status(500).json({
+        status: 'error',
+        message: 'Something went wrong!',
+      });
+    }
+  } else {
+    // Rendering the website
+    if (err.isOperational) {
+      res.status(err.statusCode).json({
+        status: err.status,
+        message: err.message,
+      });
+    } else {
+      console.error('ERROR!', err);
+      res.status(err.statusCode).render('error', {
+        title: 'Error!',
+        msg: 'Please try again later!',
+      });
+    }
   }
 };
 // Invalid ID
@@ -34,7 +61,6 @@ const handleCastErrorDB = (err) => {
 
 const handleDuplicateFieldsDB = (err) => {
   const value = err.errmsg.match(/(["'])(\\?.)*?\1/)[0];
-  console.log(value);
 
   const message = `Duplicate fields value: ${value}. Please use another value!`;
   return new AppError(message, 400);
@@ -58,7 +84,7 @@ module.exports = (err, req, res, next) => {
   err.statusCode = err.statusCode || 500;
 
   if (process.env.NODE_ENV === 'development') {
-    sendErrorDev(err, res);
+    sendErrorDev(err, req, res);
   } else if (process.env.NODE_ENV === 'production') {
     let error = { ...err };
     if (error.name === 'CastError') error = handleCastErrorDB(error);
@@ -69,7 +95,7 @@ module.exports = (err, req, res, next) => {
     if (error.name === 'JsonWebTokenError') error = handleJWTError();
     if (error.name === 'TokenExpiredError') error = handleJWTExpiredError();
 
-    sendErrorProd(error, res);
+    sendErrorProd(error, req, res);
   }
 
   res.status(err.statusCode).json({

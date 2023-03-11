@@ -13,6 +13,7 @@ exports.deleteOne = (Model) =>
       status: 'success',
       data: null,
     });
+    next();
   });
 
 // call back function that updateOne function return to another function
@@ -29,6 +30,7 @@ exports.updateOne = (Model) =>
         data: doc,
       },
     });
+    next();
   });
 
 exports.createOne = (Model) =>
@@ -41,6 +43,8 @@ exports.createOne = (Model) =>
         data: newDoc,
       },
     });
+
+    next();
   });
 
 exports.getOne = (Model, populateOpts) =>
@@ -60,6 +64,7 @@ exports.getOne = (Model, populateOpts) =>
         data: doc,
       },
     });
+    next();
   });
 
 exports.getAll = (Model) =>
@@ -86,4 +91,6 @@ exports.getAll = (Model) =>
         data: docs,
       },
     });
+
+    next();
   });

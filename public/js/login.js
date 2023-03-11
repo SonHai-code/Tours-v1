@@ -44,12 +44,12 @@ export const login = async (email, password) => {
 
 export const logout = async () => {
   const baseURL = 'http://localhost:3000';
-  const loginEndpoint = '/api/v1/users/logout';
+  const logoutEndpoint = '/api/v1/users/logout';
 
   try {
     const res = await axios({
       method: 'get',
-      url: baseURL + loginEndpoint,
+      url: baseURL + logoutEndpoint,
     });
 
     if (res.data.status === 'success') {

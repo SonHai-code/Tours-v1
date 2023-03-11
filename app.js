@@ -8,6 +8,7 @@ const xss = require('xss-clean');
 const hpp = require('hpp');
 
 const cookieParser = require('cookie-parser');
+const compression = require('compression');
 
 const cors = require('cors');
 const AppError = require('./utils/appError');
@@ -54,6 +55,8 @@ app.use(
   })
 );
 
+app.use(compression());
+
 // CORS enable on the Server
 app.use((req, res, next) => {
   res.header('Access-Control-Allow-Origin', '*'); // update to match the domain you will make the request from
@@ -62,6 +65,7 @@ app.use((req, res, next) => {
     'Origin, X-Requested-With, Content-Type, Accept'
   );
   res.header('X-Frame-Options', 'SAMEORIGIN');
+  res.header();
   next();
 });
 
@@ -78,7 +82,9 @@ app.use('/api', limiter);
 app.use(express.json());
 
 // Cookie parser - Parse the datas from the cookies
-app.use(cookieParser());
+app.use(cookieParser({ limit: '10kb' }));
+
+app.use(express.urlencoded({ extended: true, limit: '10kb' }));
 
 // Data sanitization against NoSQL query injection
 app.use(mongoSanitize());

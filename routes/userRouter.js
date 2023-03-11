@@ -1,4 +1,5 @@
 const express = require('express');
+
 const {
   getAllUsers,
   createUser,
@@ -8,6 +9,8 @@ const {
   updateMe,
   deleteMe,
   getMe,
+  uploadUserPhoto,
+  resizeUserPhoto,
 } = require('../controllers/userController');
 
 const {
@@ -27,7 +30,7 @@ const router = express.Router();
 router.post('/signup', signup); // sign up should just post
 router.post('/login', login); // sign up should just post
 
-router.get('/logout', logout); 
+router.get('/logout', logout);
 
 router.post('/forgotPassword', forgotPassword);
 router.patch('/resetPassword/:token', resetPassword);
@@ -36,9 +39,12 @@ router.patch('/resetPassword/:token', resetPassword);
 router.use(protect);
 
 router.patch('/updateMyPassword', updatePassword);
+
 // Current user
 router.route('/me').get(getMe, getUser);
-router.patch('/updateMe', updateMe);
+
+// Resize the image after updating it
+router.patch('/updateMe', uploadUserPhoto, resizeUserPhoto, updateMe);
 router.delete('/deleteMe', deleteMe);
 
 // Only admin can modify the user

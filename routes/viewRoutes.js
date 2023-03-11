@@ -3,24 +3,27 @@ const {
   getOverview,
   getTour,
   login,
-  signup,
+  getAccount,
+  updateUserData,
 } = require('../controllers/viewController');
 
-const { isLoggedIn } = require('../controllers/authController');
+const { isLoggedIn, protect } = require('../controllers/authController');
 
 const router = express.Router();
 
-router.use(isLoggedIn);
-
 // OVERVIEW PAGE
-router.get('/', getOverview);
+router.get('/', isLoggedIn, getOverview);
 
 // DETAIL PAGES
-router.get('/tour/:slug', getTour);
+router.get('/tour/:slug', isLoggedIn, getTour);
 
 // LOGIN PAGE
-router.get('/login', login);
+router.get('/login', isLoggedIn, login);
 
-// SIGNUP PAGE
-router.get('/signup', signup);
+// ACCOUNT PAGE
+router.get('/me', protect, getAccount);
+
+// ADJUST USER INFORMATIONS
+router.post('/submit-user-data', isLoggedIn, updateUserData);
+
 module.exports = router;
